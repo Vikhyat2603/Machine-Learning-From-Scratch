@@ -1,7 +1,8 @@
 import numpy as np
 
 def ReXu(x, derivative=False):
-    '''Non-asymptotic Rectified Exponential(exponent: 0.5) Unit'''
+    '''Non-asymptotic Rectified Exponential(exponent: 0.5) Unit
+    View graph at: https://www.desmos.com/calculator/eyetqjpkxb'''
     if derivative:
         return (1+np.sign(x)+0.5*(1-np.sign(x))/((0.25+abs(x))**0.5))/2
     return ((1-np.sign(x))*(0.5-(0.25+abs(x))**0.5)+x+abs(x))/2
