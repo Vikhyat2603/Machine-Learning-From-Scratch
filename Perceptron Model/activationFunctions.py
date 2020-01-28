@@ -38,7 +38,8 @@ def ReLu(x,derivative = False):
 def sigmoid(x, derivative = False):
     '''f(x) = 1/(1+np.exp(-x))'''
     if derivative:
-        return sigmoid(x)*(1-sigmoid(x))
+        s = sigmoid(x)
+        return s*(1-s)
     return 1/(1+np.exp(-x))
 
 def createScaledFunction(func, alpha):
