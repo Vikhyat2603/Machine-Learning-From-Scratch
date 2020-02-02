@@ -1,4 +1,4 @@
-# A flexible Neural Network Library based only on NumPy
+# A flexible Neural Network Library based on NumPy
 
 ## Files:
 #### - NeuralNetwork.py
