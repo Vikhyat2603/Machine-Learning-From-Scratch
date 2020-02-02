@@ -46,8 +46,8 @@
     On training for ~1 minute with Momentum and 2k training images, the network acheives 85% accuracy on the
     whole 60k image dataset.
 
-#### - mnist-files  
-    Contains MNIST data in 4 ubyte files
+#### - mnist-files.rar
+    Contains MNIST data in 4 ubyte files. Extract to ./mnist-files
     
 ### Dependencies:
     - NumPy for calculations
