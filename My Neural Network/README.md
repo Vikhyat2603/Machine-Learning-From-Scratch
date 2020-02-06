@@ -54,6 +54,9 @@
     - matplotlib, for visualisation
     - scikit to make moons dataset for classification
     - python-mnist to parse MNIST data files (https://github.com/sorki/python-mnist)
+    
+### Performance:
+    View the performance folder for performance visualisations on classification and regression 
 
 ### Credits:
     3Blue1Brown's Neural Networks playlist with great intuitive and mathematical explanations on Youtube
