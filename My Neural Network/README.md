@@ -25,7 +25,7 @@
 
 #### - dataCreator.py
     Creates data for binary classification; 2 datasets are available: 'circular' - data seperable by a circle
-    (inside/outside circle) and 'moons' - data in the shape of two moons from scikit.datasets.make_moons. Points
+    (inside/outside circle) and 'moons' - data in the shape of two arcs from scikit.datasets.make_moons. Points
     are created, labelled, and then shuffled. Noise values andnumber of points needed can be given for both datasets
 
 #### - Regression.py
