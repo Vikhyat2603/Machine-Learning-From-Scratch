@@ -1,4 +1,4 @@
-# Circular Dataset
+# Binary Classification on Circular Dataset
 
 Dataset includes points belonging to one of two classes: less than or greater than a specific distance from the centre (inside or outside a circle around the centre). Data noise can be adjusted along with number of data points and circle radius.
 
