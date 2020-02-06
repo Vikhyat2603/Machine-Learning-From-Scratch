@@ -14,3 +14,12 @@ Shows percentage of points correctly classified throughout training, for both tr
 
 #### - Training.wmv:
 Shows the Neural Network's changes in prediction for points around the input space.
+
+## Hyperparameters:  
+- Architecture: (2,4,3,1)
+- Activation Function: Hidden - ReLu, Output - atanScaled
+- Epochs: 300
+- Learning Rate: 0.02
+- Momentum Enabled? : True
+- Momentum Rate(beta): 0.9
+- Batc Size: 7
