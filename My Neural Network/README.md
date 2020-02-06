@@ -42,7 +42,7 @@
     whether it falls into the first class. (livePlot slows down training and doesn't work on notebooks)
 
 #### - MNIST.py 
-    Uses the Neural Network (with architecture 784,100,10) to try to solve the classic MNIST problem.
+    Uses the Neural Network (with architecture 784,100,10) on the classic MNIST dataset.
     On training for ~1 minute with Momentum and 2k training images, the network acheives 85% accuracy on the
     whole 60k image dataset.
 
