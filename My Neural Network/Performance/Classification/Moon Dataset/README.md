@@ -1,8 +1,7 @@
 # Binary Classification on scikit's make_moons dataset
 
 Dataset includes points belonging to one of two classes that are in the shape of 2 arcs(/'moons') in opposite directions.  
-Scikit Docs: [sklearn.datasets.make_moons](https://scikit-learn.org/stable/modules/generated/sklearn.datasets.make_moons.html)  
-Data noise can be adjusted along with number of data points.
+Data noise can be adjusted along with number of data points. Scikit Docs: [sklearn.datasets.make_moons](https://scikit-learn.org/stable/modules/generated/sklearn.datasets.make_moons.html)  
 
 ## Files:  
 #### - Dataset and Predictions.png:  
@@ -16,3 +15,12 @@ Shows percentage of points correctly classified throughout training, for both tr
 
 #### - Training.wmv:
 Shows the Neural Network's changes in prediction for points around the input space.
+
+## Hyperparameters:  
+- Architecture: (2,4,3,1)
+- Activation Function: Hidden - ReLu, Output - atanScaled
+- Epochs: 1000
+- Learning Rate: 0.02
+- Momentum Enabled? : True
+- Momentum Rate(beta): 0.9
+- Batc Size: 7
