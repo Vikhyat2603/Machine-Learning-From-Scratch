@@ -22,4 +22,4 @@ Shows the Neural Network's changes in prediction for points around the input spa
 - Learning Rate: 0.02
 - Momentum Enabled? : True
 - Momentum Rate(beta): 0.9
-- Batc Size: 7
+- Batch Size: 7
