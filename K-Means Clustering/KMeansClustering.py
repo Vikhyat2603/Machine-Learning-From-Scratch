@@ -44,5 +44,3 @@ def animate(_, classes, clusters, centroids):
  
 #Create an animation that calls the animate function with arguments every 1 second
 ani = animation.FuncAnimation(fig, animate, fargs = (classes, clusters, centroids), interval=1000)
-
-plt.show()
