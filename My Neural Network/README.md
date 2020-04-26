@@ -48,6 +48,10 @@ This is one of the first ML projects I worked on and it gave me a great insight 
     On training for ~5 seconds with EWA update and 2500 training images, the network acheives 97% accuracy on
     the whole 60k image dataset.
 
+#### - ExponentiallyWeightedAverages.py
+    A visualisation of Exponentially Weighted Averaging that I used to investigate the effect of bias correction
+    on the algorithm.
+
 #### - mnist-files.rar
     Contains MNIST data in 4 ubyte files. Extract to ./mnist-files
     
