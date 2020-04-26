@@ -4,10 +4,11 @@ This is one of the first ML projects I worked on and it gave me a great insight 
 
 ## Files:
 #### - NeuralNetwork.py
-    Contains NeuralNetwork class; you can set the architecture and activators during initialisation, then give
-    training data with desired batch size, which it will split the data into. To train the network on the data,
-    call batchEvaluation which runs gradient descent with the training data, and provide the learning rate, whether
-    or not you want Momentum to be implemented, and momentum factor.
+    Contains NeuralNetwork class; you can set the architecture and activators during initialisation, along with
+    a scaling factor for the weights. Before training pass data with desired mini-batch size to setTrainingData,
+    which will split the data into mini-batches. To train the network, call batchEvaluation which runs gradient
+    descent on the training data, provided the learning rate, the gradient update type desired (classic,
+    momentum, or ewa(exponentially weighted average)), and momentum factor.
     
 #### - activationFunctions.py
     Contains activation functions in the form f(x, deriv) where x is the input and deriv is a boolean noting whether
@@ -31,22 +32,21 @@ This is one of the first ML projects I worked on and it gave me a great insight 
     are created, labelled, and shuffled. Noise levels and number of data points can be given for both datasets
 
 #### - Regression.py
-    Uses the Neural Network for a regression task - example given: trying to fit data on the curve y = 2x - x^2.
+    Uses the Neural Network for a regression task - example given: trying to fit data on the curve y = sin(x/10).
     Prints the NRMSE(Normalsied Root Mean Square Error) for both training and validation data. If livePlot is on,
-    it shows the network's progress in trying to fit the data.
-    (livePlot slows down training and doesn't work on notebooks)
+    it shows the network's progress in trying to fit the data. (livePlot slows down training and doesn't work on notebooks)
 
 #### - Classification.py  
     Uses the Neural Network for a classification task. While training, prints the RMSE(Root Mean Square Error) for
     both training and validation data, along with accuracy percentage. If livePlot is turned on, it shows the
     network's progress with the binary classification by showing the network's output for a grid that is
     approximately the input space, in a coloured format from red to blue representing the network's confidence of
-    whether it falls into the first class. (livePlot slows down training and doesn't work on notebooks)
+    whether it falls into the first class. (livePlot slows down training and doesn't work inline)
 
 #### - MNIST.py 
     Uses the Neural Network (with architecture 784,100,10) on the classic MNIST dataset.
-    On training for ~1 minute with Momentum and 2k training images, the network acheives 85% accuracy on the
-    whole 60k image dataset.
+    On training for ~5 seconds with EWA update and 2500 training images, the network acheives 97% accuracy on
+    the whole 60k image dataset.
 
 #### - mnist-files.rar
     Contains MNIST data in 4 ubyte files. Extract to ./mnist-files
