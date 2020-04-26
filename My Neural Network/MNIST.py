@@ -7,22 +7,31 @@ from mnist import MNIST
 from NeuralNetwork import NeuralNetwork
 
 # =============================================================================
-# ############################# Hyperparameters ###############################
+# ################################# Get Data ##################################
 # =============================================================================
 
-np.random.seed(1)
-layerLengths = (784,100,10)
-hiddenActivator = aF.ReLu
-outputActivator = aF.atanScaled
-activators = [hiddenActivator]*(len(layerLengths)-2)+[outputActivator] # Create activators list
+mndata = MNIST(r'.\mnist-files')
+MNISTimages, MNISTclasses = mndata.load_training()
 
-epochs = 1000
-alpha = 0.001 # Learning rate
-beta = 0.9 # Momentum factor
-batchSize = 30 
-momentumEnabled = True
+trainLength = 2500
+validationLength = 500
+totalLength = len(MNISTimages)
 
-NN = NeuralNetwork(layerLengths, activators) # Create Neural Network Object
+inputs = np.array(MNISTimages)
+classes = np.array(MNISTclasses)
+
+# One Hot Encoding
+indices = np.vstack([range(totalLength), MNISTclasses])
+labels = np.zeros((totalLength, 10))
+labels[indices[0], indices[1]] = 1
+
+trainInputs = inputs[:trainLength]
+trainLabels = labels[:trainLength]
+trainClasses = classes[:trainLength]
+
+validationInputs = inputs[trainLength: trainLength + validationLength]
+validationLabels = labels[trainLength: trainLength + validationLength]
+validationClasses = classes[trainLength: trainLength + validationLength]
 
 # =============================================================================
 # ######################## Data Processing Functions ##########################
@@ -38,41 +47,30 @@ def displayAndCheck(index):
     res = NN.feedForward(img.reshape(784,1))
     print(res.argmax())
 
-def getCorrectCount(predDataLabels, dataClasses):
-    '''return number of correct predictions given labels(shape: (dataLength, 10)), "classes"(not one-hot encoded)'''
-    return (predDataLabels.argmax(axis = 1) == dataClasses).sum()
+def getAccuracy(predictedLabels, actualLabels):
+    ''' return % of correct predictions given (predicted, actual)'''
+    return (predictedLabels.round() == actualLabels).mean()*100
 
 def getRMSE(x, y):
     return float(np.sqrt(((x - y)**2).mean()))
 
 # =============================================================================
-# ################################# Get Data ##################################
+# ############################# Hyperparameters ###############################
 # =============================================================================
 
-mndata = MNIST(r'.\mnist-files')
-MNISTimages, MNISTclasses = mndata.load_training()
+np.random.seed(1)
+layerLengths = (784,100,10)
+hiddenActivator = aF.ReLu
+outputActivator = aF.atanScaled
+activators = [hiddenActivator]*(len(layerLengths)-2)+[outputActivator] # Create activators list
 
-trainLength = 2000
-validationLength = 1000
-totalLength = len(MNISTimages)
+epochs = 50
+alpha = 0.01 # Learning rate
+beta = 0.9 # Momentum factor
+miniBatchSize = 32
+gradientUpdateType = 'ewa'
 
-inputs = np.array(MNISTimages)
-classes = np.array(MNISTclasses)
-
-# One Hot Encoding
-indices = np.vstack([range(totalLength),MNISTclasses])
-labels = np.zeros((totalLength, 10))
-labels[indices[0], indices[1]] = 1
-
-trainInputs = inputs[:trainLength]
-trainLabels = labels[:trainLength]
-trainClasses = classes[:trainLength]
-
-validationInputs = inputs[trainLength: trainLength + validationLength]
-validationLabels = labels[trainLength: trainLength + validationLength]
-validationClasses = classes[trainLength: trainLength + validationLength]
-
-NN.setTrainingData(trainInputs, trainLabels, batchSize) # Send training data to neural network object
+NN = NeuralNetwork(layerLengths, activators, 0.1) # Create Neural Network Object
 
 # =============================================================================
 # ############################### Train Network ###############################
@@ -80,69 +78,77 @@ NN.setTrainingData(trainInputs, trainLabels, batchSize) # Send training data to 
 
 trainLosses = [] # train data loss
 validationLosses = [] # validation data loss
-correctTrain = [] # number of correct matches with train data
-correctValidation = [] # number of correct matches with validation data
+trainAccuracies = [] # number of correct matches with train data
+validationAccuracies = [] # number of correct matches with validation data
 reportInterval = epochs // 10 # Prints performance statistics at intervals
 
-print('Date & Time:',str(datetime.datetime.now()).split('.')[0])
+NN.setTrainingData(trainInputs, trainLabels, miniBatchSize) # Send training data to neural network object
+
+print(f'Date & Time: {str(datetime.datetime.now())[:-7]}')
 print('Starting training...\n')
 startTime = t()
 
 # Try-Finally exception handling used to allow keyboardInterrupt to interrupt training and still show final performance
 try:
     for epoch in range(epochs+1):
-        NN.batchEvaluation(alpha, momentumEnabled, beta) # Runs training for one epoch
-
         if (epoch % reportInterval) == 0:
             # Print (and record) performance statistics
-            print('Epoch:', epoch, '| Date & Time:', str(datetime.datetime.now()).split('.')[0])
+            print(f'Epoch: {epoch} | Date & Time: {str(datetime.datetime.now())[:-7]}')
             
-            predictedLabels = NN.feedForward(trainInputs.T).T # Predict labels for training data
-            RMSE = getRMSE(predictedLabels, trainLabels)   
-            correctResultCt = getCorrectCount(predictedLabels, trainClasses)
-            correctPct = round(correctResultCt/trainLength*100, 2)
+            predictedLabels = NN.feedForward(trainInputs.T).T
+            trainRMSE = getRMSE(predictedLabels, trainLabels)
+            trainAccuracy = getAccuracy(predictedLabels, trainLabels)
             
-            trainLosses.append(RMSE)
-            correctTrain.append(correctPct)
+            trainLosses.append(trainRMSE)
+            trainAccuracies.append(trainAccuracy)
             
-            print('\tTrain Data      - RMSE:{0:.6f}'.format(round(RMSE, 6)), '| Correct:', correctResultCt, '/', trainLength, ' - ', correctPct,'%')
-    
-            predictedLabels = NN.feedForward(validationInputs.T).T # Predict labels for validation data
-            RMSE = getRMSE(predictedLabels, validationLabels)        
-            correctResultCt = getCorrectCount(predictedLabels, validationClasses)
-            correctPct = round(correctResultCt/validationLength*100, 2)
+            predictedLabels = NN.feedForward(validationInputs.T).T
+            validationRMSE = getRMSE(predictedLabels, validationLabels)
+            validationAccuracy = getAccuracy(predictedLabels, validationLabels)
             
-            validationLosses.append(RMSE)
-            correctValidation.append(correctPct) 
+            validationLosses.append(validationRMSE)
+            validationAccuracies.append(validationAccuracy) 
             
-            print('\tValidation Data - RMSE:{0:.6f}'.format(round(RMSE, 6)), '| Correct:', correctResultCt, '/', validationLength, ' - ', correctPct,'%')   
+            print(f'\tRMSE - Train: {trainRMSE:.6f} | Validation: {validationRMSE:.6f}')
+            print(f'\tAccuracy - Train: {trainAccuracy:.2f}% | Validation: {validationAccuracy:.2f}%')
+        
+        NN.miniBatchGD(alpha, gradientUpdateType, beta) # Runs training for one epoch
             
 finally:
-    print('\nTime taken:', t() - startTime)
+    print(f'\nTime taken: {t() - startTime}')
 
     # Print (and plot) performance statistics
+    
     predictedLabels = NN.feedForward(inputs.T).T
     RMSE = getRMSE(predictedLabels, labels)
-    correctResultCt = getCorrectCount(predictedLabels, classes)
-    correctPct = round(correctResultCt/totalLength*100, 2)
+    accuracy = getAccuracy(predictedLabels, labels)
     
-    print('Complete Data - RMSE:{0:.6f}'.format(round(RMSE,6)), '| Correct:', correctResultCt, '/', totalLength, ' - ', correctPct,'%')
-    
-    if momentumEnabled:
-        print('Epochs:', epochs, ' |With Momentum|', '  Alpha:', alpha, '  Beta:', round(beta,6), '  Batch Size:', batchSize)
-    else:
-        print('Epochs:', epochs, ' |No Momentum|', '  Alpha:', alpha, '  Batch Size:', batchSize)
+    print(f'Complete Data - RMSE:{RMSE:.6f} | Accuracy: {accuracy:.2f}%')
 
-    print('Architecture:', layerLengths, '   Hidden Activator:', hiddenActivator.__name__, '   Output Activator:', outputActivator.__name__)
+    if gradientUpdateType:
+        print(f'Epochs: {epoch+1} - GD with {gradientUpdateType} | Alpha: {alpha} | Beta: {beta} | Mini-Batch Size: {miniBatchSize}')
+    else:
+        print(f'Epochs: {epoch+1} - Classic GD  | Alpha: {alpha} | Mini-Batch Size: {miniBatchSize}')
     
-    plt.plot(trainLosses, '-o', c = 'r', linewidth = 0.5, markersize = 1.5, label = 'Train RMSE')
-    plt.plot(validationLosses, '-o', c = 'b', linewidth = 0.5, markersize = 1.5, label = 'Validation RMSE')
-    plt.legend(loc = "upper right")
-    plt.show()
+    print(f'Architecture: {layerLengths} | Hidden Activator: {hiddenActivator.__name__} | Output Activator: {outputActivator.__name__}')
+    
+    plt.close('all')
+
+    ax1 = plt.subplot(121)
         
-    plt.plot(correctTrain, '-o', c = 'r', linewidth = 0.5, markersize = 1.5, label = 'Train Correct %')
-    plt.plot(correctValidation, '-o', c = 'b', linewidth = 0.5, markersize = 1.5, label = 'Validation Correct %')
-    plt.legend(loc = "lower right")
+    ax1.plot(trainLosses, '-o', c = 'r', linewidth = 0.4, markersize = 1.5)
+    ax1.plot(validationLosses, '-o', c = 'b', linewidth = 0.4, markersize = 1.5)
+    ax1.legend(['Train RMSE', 'Validation RMSE'], loc = "upper right")
+    ax1.set_ylim(0,1)
+
+    ax2 = plt.subplot(122)
+    
+    ax2.plot(trainAccuracies, '-o', c = 'r', linewidth = 0.4, markersize = 1.5)
+    ax2.plot(validationAccuracies, '-o', c = 'b', linewidth = 0.4, markersize = 1.5)
+    ax2.legend(['Train Accuracy', 'Validation Accuracy'], loc = "lower right")
+    ax2.set_ylim(0,100)
+
+    plt.suptitle('RMSE and Accuracy')
     plt.show()
     
 ################################################################
