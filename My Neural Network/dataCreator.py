@@ -60,13 +60,15 @@ titles = ['DataSet', 'Predicted(Discrete)', 'Predicted(Actual)', 'Prediction Spa
 def plotPoints(p, r, show = True, maxR = 2, maxC = 2):
     global fg
     if not fg:
-        fg = plt.figure(figsize=(8, 8))
+        fg = plt.figure(0, figsize=(6, 6))
+        fg.clear()
     global ct
     print('Plotting points')
     ax = fg.add_subplot(maxR, maxC, ct)
     ax.set_title(titles[ct-1])
     ct += 1
     ax.scatter(p[:,0], p[:,1], c = cpick.to_rgba(r))
+    plt.tight_layout()
     if show:
         plt.show()
 
