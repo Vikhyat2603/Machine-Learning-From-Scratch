@@ -12,16 +12,16 @@ import activationFunctions as aF
 # =============================================================================
 
 np.random.seed(1)
-layerLengths = (2,4,3,1)
+layerLengths = (2,4,1)
 hiddenActivator = aF.ReLu
 outputActivator = aF.atanScaled
 activators = [hiddenActivator] * (len(layerLengths)-2) + [outputActivator] # Create activators list
 
-epochs = 1000
+epochs = 100
 alpha = 0.02 # Learning rate
 beta = 0.9 # Momentum factor
-batchSize = 7
-momentumEnabled = True
+miniBatchSize = 8
+gradientUpdateType = 'momentum'
 
 NN = NeuralNetwork(layerLengths, activators) # Create Neural Network Object
 
@@ -30,10 +30,10 @@ NN = NeuralNetwork(layerLengths, activators) # Create Neural Network Object
 # =============================================================================
 
 dataCreator.pointCount = 2000
-dataCreator.noise = 12
-dataCreator.pointSeperation = 20
+dataCreator.noise = 5
+dataCreator.pointSeperation = 4.5
 
-inputs, labels = dataCreator.createData('moons')
+inputs, labels = dataCreator.createData('circular')
 labels = labels.reshape(-1, 1)
 
 trainLength = 750
@@ -46,37 +46,59 @@ trainLabels = labels[:trainLength]
 validationInputs = inputs[trainLength: trainLength + validationLength]
 validationLabels = labels[trainLength: trainLength + validationLength]
 
-NN.setTrainingData(trainInputs, trainLabels, batchSize) # Send training data to neural network object
-
+NN.setTrainingData(trainInputs, trainLabels, miniBatchSize) # Send training data to neural network object
 # =============================================================================
 # ######################## Data Processing Functions ##########################
 # =============================================================================
 
 livePlot = True # Live Plot binary classification progress
-plotData = True
+plotDataOn = True
 
-# Prepare live plot grid
-if livePlot or plotData:
-    
-    minX, minY = inputs.min(axis = 0)
-    maxX, maxY = inputs.max(axis = 0)
-    grid = np.array(list(product(np.linspace(minX, maxX, 40), np.linspace(minY, maxY, 40))))
-    
+# Prepare data plot grid
+minX, minY = inputs.min(axis = 0)
+maxX, maxY = inputs.max(axis = 0)
+grid = np.array(list(product(np.linspace(minX, maxX, 40), np.linspace(minY, maxY, 40))))
+
+if livePlot:
     fig = plt.figure(figsize = (4,4))
     liveAx = fig.add_subplot(1, 1, 1)
 
-##def adjustPlotColour(x): return aF.atan(5*(x-0.5))/2.4+0.5
-def adjustPlotColour(x): return x
+def plotData():
+    plt.close('all')
+    
+    dataCreator.plotPoints(inputs, labels.reshape(totalLength), False)
+    dataCreator.plotPoints(inputs, predictedLabels.flatten().round(), False)
+    dataCreator.plotPoints(inputs, predictedLabels.flatten(), False)
+    dataCreator.plotPoints(grid, NN.feedForward(grid.T).flatten(), False)
 
+    fig = plt.figure(figsize = (8,4))
+    ax1 = plt.subplot(121)
+        
+    ax1.plot(trainLosses, '-o', c = 'r', linewidth = 0.4, markersize = 1.5)
+    ax1.plot(validationLosses, '-o', c = 'b', linewidth = 0.4, markersize = 1.5)
+    ax1.legend(['Train RMSE', 'Validation RMSE'], loc = "upper right")
+    ax1.set_ylim(0,1)
+
+    ax2 = plt.subplot(122)
+    
+    ax2.plot(trainAccuracies, '-o', c = 'r', linewidth = 0.4, markersize = 1.5)
+    ax2.plot(validationAccuracies, '-o', c = 'b', linewidth = 0.4, markersize = 1.5)
+    ax2.legend(['Train Accuracy', 'Validation Accuracy'], loc = "lower right")
+    ax2.set_ylim(0,100)
+
+    plt.suptitle('RMSE and Accuracy')
+    plt.show()
+    
 def plotLive(inputs, predicted):
-    liveAx.scatter(inputs[:,0], inputs[:,1], c = dataCreator.cpick.to_rgba(adjustPlotColour(predicted)))
+    liveAx.scatter(inputs[:,0], inputs[:,1], c = dataCreator.cpick.to_rgba(predicted))
+    plt.pause(1e-6)
 
-def getCorrectCount(predictedLabels, actualLabels):
-    ''' return number of correct predictions given (predicted, actual)'''
-    return (predictedLabels.round() == actualLabels).sum()
+def getAccuracy(predictedLabels, actualLabels):
+    ''' return % of correct predictions given (predicted, actual)'''
+    return (predictedLabels.round() == actualLabels).mean()*100
 
 def getRMSE(x, y):
-    return float(((x-y)**2).mean()**0.5)
+    return float(np.sqrt(((x - y)**2).mean()))
 
 # =============================================================================
 # ############################### Train Network ###############################
@@ -84,9 +106,9 @@ def getRMSE(x, y):
 
 trainLosses = [] # train data loss
 validationLosses = [] # validation data loss
-correctTrain = [] # number of correct matches with train data
-correctValidation = [] # number of correct matches with validation data
-reportInterval = epochs // 25 # Prints performance statistics at intervals and plots if livePlot is on (decrease for continous plotting)
+trainAccuracies = [] # number of correct matches with train data
+validationAccuracies = [] # number of correct matches with validation data
+reportInterval = epochs // 10 # Prints performance statistics at intervals and plots if livePlot is on (decrease for continous plotting)
 
 print('Date & Time:',str(datetime.datetime.now()).split('.')[0])
 print('Starting training...\n')
@@ -95,35 +117,31 @@ startTime = t()
 # Try-Finally exception handling used to allow keyboardInterrupt to interrupt training and still show final performance
 try:
     for epoch in range(epochs):
-        NN.batchEvaluation(alpha, momentumEnabled, beta)  # Runs training for one epoch
-        
         if (epoch % reportInterval) == 0:
             # Print (and record) performance statistics
-            print('Epoch:', epoch, '| Date & Time:', str(datetime.datetime.now()).split('.')[0])
+            print(f'Epoch: {epoch} | Date & Time: {str(datetime.datetime.now())[:-7]}')
             
             predictedLabels = NN.feedForward(trainInputs.T).T
-            RMSE = getRMSE(predictedLabels, trainLabels)
-            correctResultCt = getCorrectCount(predictedLabels, trainLabels)
-            correctPct = round(correctResultCt/trainLength*100, 2)
+            trainRMSE = getRMSE(predictedLabels, trainLabels)
+            trainAccuracy = getAccuracy(predictedLabels, trainLabels)
             
-            trainLosses.append(RMSE)
-            correctTrain.append(correctPct)
+            trainLosses.append(trainRMSE)
+            trainAccuracies.append(trainAccuracy)
             
-            print('\tTrain Data      - RMSE:{0:.6f}'.format(round(RMSE, 6)), '| Correct:', correctResultCt, '/', trainLength, ' - ', correctPct,'%')
-    
             predictedLabels = NN.feedForward(validationInputs.T).T
-            RMSE = getRMSE(predictedLabels, validationLabels)       
-            correctResultCt = getCorrectCount(predictedLabels, validationLabels)
-            correctPct = round(correctResultCt/validationLength*100, 2)
+            validationRMSE = getRMSE(predictedLabels, validationLabels)
+            validationAccuracy = getAccuracy(predictedLabels, validationLabels)
             
-            validationLosses.append(RMSE)
-            correctValidation.append(correctPct) 
+            validationLosses.append(validationRMSE)
+            validationAccuracies.append(validationAccuracy) 
             
-            print('\tValidation Data - RMSE:{0:.6f}'.format(round(RMSE, 6)), '| Correct:', correctResultCt, '/', validationLength, ' - ', correctPct,'%')
-              
+            print(f'\tRMSE - Train: {trainRMSE:.6f} | Validation: {validationRMSE:.6f}')
+            print(f'\tAccuracy - Train: {trainAccuracy:.2f}% | Validation: {validationAccuracy:.2f}%')
+            
             if livePlot:
-                plotLive(grid, NN.feedForward(grid.T).flatten())
-                plt.pause(1e-8)
+                plotLive(grid, NN.feedForward(grid.T).flatten())    
+        
+        NN.miniBatchGD(alpha, gradientUpdateType, beta)  # Runs training for one epoch
                                
 finally:
     print('\nTime taken:', round(t() - startTime, 6))
@@ -131,32 +149,17 @@ finally:
     # Print (and plot) performance statistics
     predictedLabels = NN.feedForward(inputs.T).T
     RMSE = getRMSE(predictedLabels, labels)
-    correctResultCt = getCorrectCount(predictedLabels, labels)
-    correctPct = round(correctResultCt/totalLength*100, 2)
+    accuracy = getAccuracy(predictedLabels, labels)
     
-    print('Complete Data - RMSE:{0:.6f}'.format(round(RMSE,6)), '| Correct:', correctResultCt, '/', totalLength, ' - ', correctPct,'%')
+    print(f'Complete Data - RMSE:{RMSE:.6f} | Accuracy: {accuracy:.2f}%')
 
-    if momentumEnabled:
-        print('Epochs:', epoch+1, ' |With Momentum|', '  Alpha:', alpha, '  Beta:', round(beta,6), '  Batch Size:', batchSize)
+    if gradientUpdateType:
+        print(f'Epochs: {epoch+1} - GD with {gradientUpdateType} | Alpha: {alpha} | Beta: {beta} | Mini-Batch Size: {miniBatchSize}')
     else:
-        print('Epochs:', epoch+1, ' |No Momentum|', '  Alpha:', alpha, '  Batch Size:', batchSize)
+        print(f'Epochs: {epoch+1} - Classic GD  | Alpha: {alpha} | Mini-Batch Size: {miniBatchSize}')
     
-    print('Architecture:', layerLengths, '   Hidden Activator:', hiddenActivator.__name__, '   Output Activator:', outputActivator.__name__)
+    print(f'Architecture: {layerLengths} | Hidden Activator: {hiddenActivator.__name__} | Output Activator: {outputActivator.__name__}')
     
-    if plotData:
-        dataCreator.plotPoints(inputs, labels.reshape(totalLength), False)
-        dataCreator.plotPoints(inputs, predictedLabels.flatten().round(), False)
-        dataCreator.plotPoints(inputs, predictedLabels.flatten(), False)
-        dataCreator.plotPoints(grid, NN.feedForward(grid.T).flatten(), True)
-        
-        plt.plot(trainLosses, '-o', c = 'r', linewidth = 0.4, markersize = 1.5, label = 'Train RMSE')
-        plt.plot(validationLosses, '-o', c = 'b', linewidth = 0.4, markersize = 1.5, label = 'Validation RMSE')
-        plt.legend(loc = "upper right")
-        plt.show()
-            
-        plt.plot(correctTrain, '-o', c = 'r', linewidth = 0.4, markersize = 1.5, label = 'Train Correct %')
-        plt.plot(correctValidation, '-o', c = 'b', linewidth = 0.4, markersize = 1.5, label = 'Validation Correct %')
-        plt.legend(loc = "lower right")
-        plt.show()
-        
+    if plotDataOn:
+        plotData()
 ####################################################################
