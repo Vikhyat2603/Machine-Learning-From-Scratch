@@ -51,4 +51,4 @@ def displayImage(idx):
     axes[0].imshow(testImg.reshape(28,28))
     axes[1].imshow(predImg.reshape(28,28))
     
-displayImage(4) # Change 0 to any index from 0 to 59999
+displayImage(4) # Change to any index from 0 to 59999
