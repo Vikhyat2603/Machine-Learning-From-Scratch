@@ -1,4 +1,4 @@
-# Using Genetic Algorithms to train Neural Networks - built from scratch on NumPy
+# Using Genetic Algorithms to train Neural Networks - built from scratch w/ NumPy
 
 ## Files:
 #### - activationFunctions.py
