@@ -19,7 +19,7 @@ class MountainCarGame:
         self.isOver = False
         
         # Additional State info needed for custom fitness function:
-        self.maxHeight = -1 # Stores max height reached by the car
+        self.maxPosition = -1 # Stores max position reached by the car
     
     def getState(self):
         ''' Gets current game state '''
@@ -27,7 +27,7 @@ class MountainCarGame:
     
     def recordState(self):
         ''' Records information about the state, used later in custom fitness function '''
-        self.maxHeight = max(self.maxHeight, self.state[0]) # Max height reached by car is kept track of
+        self.maxPosition = max(self.maxPosition, self.state[0]) # Max position (rightward) reached by car is kept track of
     
     def normaliseState(self, state):
         ''' Normalises state according to expecting maximum state values in game '''
@@ -53,9 +53,10 @@ class MountainCarGame:
         ''' Adjusts the final agent fitness '''
 
         fitness /= self.game._max_episode_steps # Fitness range is now : {-1 to 0] - higher if game ends early
-        fitness += (self.maxHeight+1.2)/12 # Adds a term between 0 to 0.15 that's higher if maxHeight is higher (height range : {-1.2 to 0.6})
+         # Adds a term between 0 to 0.15 that's higher if maxPosition is higher (position range : {-1.2 to 0.6})
+        fitness += (self.maxPosition+1.2)/12
         
-        # Final Fitness Range : {0 to 1} (although 1 is not acheivable as it must take some time to achieve high heights)   
+        # Final Fitness Range : {0 to 1} (although 1 is not acheivable as it must take some time to reach further right)   
         return (fitness+1)/1.15
     
     @staticmethod
