@@ -1,4 +1,4 @@
-# A basic Neural Network Library built from scratch on NumPy
+# A basic Neural Network Library - built from scratch on NumPy
 
 This is one of the first ML projects I worked on and it gave me a great insight into Neural Networks as I designed the complete structure and learning algorithm myself. (After understanding the concepts from 3Blue1Brown's Youtube Playlist)
 
