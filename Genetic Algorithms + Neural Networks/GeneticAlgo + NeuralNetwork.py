@@ -201,7 +201,7 @@ plt.plot(maxFitnesses, c='g', label = 'Max')
 plt.xlabel('Generation')
 plt.ylabel('Fitness')
 plt.ylim(-0.1, 1.1)
-plt.title("Population Fitnesses")
+plt.title("Population Fitness")
 
 plt.legend()
 plt.show()
